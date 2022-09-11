@@ -1,0 +1,12 @@
+[Unit]
+Description=Waterkotte ResumatCD4 Data Collector Service
+
+[Service]
+Type=simple
+User=root
+Restart=on-failure
+WorkingDirectory=/home/cloud/Haustechnik/heizung
+ExecStart=python3 main.py
+
+[Install]
+WantedBy=multi-user.target
