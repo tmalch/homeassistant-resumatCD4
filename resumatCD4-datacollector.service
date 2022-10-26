@@ -5,7 +5,8 @@ Description=Waterkotte ResumatCD4 Data Collector Service
 Type=simple
 User=root
 Restart=on-failure
-WorkingDirectory=/home/cloud/Haustechnik/heizung
+OnFailure=email-service-status-to-me@%i.service
+WorkingDirectory=/usr/local/resumatCD4_homeassistant/
 ExecStart=python3 main.py
 
 [Install]

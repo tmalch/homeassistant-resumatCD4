@@ -1,18 +1,16 @@
 from time import sleep
 from resumatcd4 import ResumatCD4
 from mqtt import MQTT
-
+import config
 import logging
-logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(level=config.LOG_LEVEL)
 logger = logging.getLogger()
 
 
-cd4 = ResumatCD4("/dev/heizung")
-mqtt = MQTT()
+cd4 = ResumatCD4(config.CD4_DEV, config.CD4_BAUDRATE)
+mqtt = MQTT(config.MQTT_HOST, config.MQTT_PORT)
 
-
-def log_attr(attr, value):
-    print("{} {} {}".format(attr.name, value, attr.unit))
 
 attributes = [
     "Temp-Aussen",
@@ -47,7 +45,7 @@ while True:
     min_sleep_duration = attr_retrieval_order[0][1]
     sleep(min_sleep_duration)
     
-    attr_retrieval_order = [[n,i-min_sleep_duration] for n,i in attr_retrieval_order]
+    attr_retrieval_order = [[n, i-min_sleep_duration] for n,i in attr_retrieval_order]
 
     while len(attr_retrieval_order) > 0 and attr_retrieval_order[0][1] <= 0:
         attr_id, _ = attr_retrieval_order.pop(0)

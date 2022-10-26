@@ -1,0 +1,26 @@
+
+Collect data from a Watterkotte Resümat CD4 controller for heatpumps and pulish it through MQTT in
+a homeassistant friendly format.
+
+Install: 
+* Download or clone 
+* pip3 install -r requirements.txt
+* Change values in config.py according to your needs 
+* In resumatCD4-datacollector.service set WorkingDirectory= to the path of this project
+* In file email-service-status-to-me@.service you can set an email address to receive errors on failure of the systemd service (default $USER@localhost)
+* Copy the .service files to /etc/systemd/system/
+* systemctl start resumatCD4-datacollector.service
+
+Tested with ResümatCD4 version 8125. Software version 7000, 8000 and 8011 need different attribute addresses. See mwllgr's project.
+The attributes are defined in ResumatCD4::attributes (resumatcd4.py). There you can change names and polling intervalls and define new attributes.
+The set of attributes which get collected is defined in variable attributes in main.py.
+
+
+MQTT Topics: 
+  * heizung/<attr_id>
+  * homeassistant/sensor/<attr_id>/config
+
+
+Resources for the protocol and memory addresses: 
+https://github.com/mwllgr/fhem-waterkotte-resuemat-cd4
+https://www.haustechnikdialog.de/Forum/t/6144/Waterkotte-5017-3-an-den-Computer-anschliessen?page=2

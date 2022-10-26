@@ -158,9 +158,9 @@ logger = logging.getLogger()
 
 
 class BaseRCD4():
-    unit = ""
-    default_poll_intervall = 60
-    device_class = ""
+    unit = None
+    default_poll_intervall = 300
+    device_class = None
     def toJson(self):
         return self
 
@@ -172,7 +172,7 @@ class GenericFloat(float, BaseRCD4):
 
 class Temperature(GenericFloat):
     unit = "°C"
-    default_poll_intervall = 120
+    default_poll_intervall = 300
     device_class = "temperature"
 
     def toJson(self):
@@ -183,6 +183,7 @@ class Temperature(GenericFloat):
 
 class BitField(BaseRCD4):
     bit_names = ["0", "1", "2", "3", "4", "5", "6", "7"]
+    default_poll_intervall = 300
 
     def __init__(self, byte: int) -> None:
         self.data = byte
@@ -199,7 +200,9 @@ class BitField(BaseRCD4):
             if bit_name:
                 v = self.get_bit(bit_name)
                 if v:
-                    res = res + bit_name + ", "
+                    if len(res) > 0:
+                        res = res + ","
+                    res = res + bit_name
         return res
     
     def __str__(self) -> str:
@@ -218,7 +221,7 @@ class BitField(BaseRCD4):
 
 
 class Attribute:
-    def __init__(self, address: int, length: int, menu_entry: str, id: str, type: BaseRCD4,  pretty_name = None) -> None:
+    def __init__(self, address: int, length: int, menu_entry: str, id: str, type: BaseRCD4,  pretty_name = None, poll_intervall = None) -> None:
         self.id = id
         self.pretty_name = pretty_name or id
         self.address = address
@@ -226,7 +229,7 @@ class Attribute:
         self.type = type
         self.menu_entry = menu_entry
 
-        self.poll_intervall = self.type.default_poll_intervall
+        self.poll_intervall = poll_intervall or self.type.default_poll_intervall
         self.unit = self.type.unit
         self.device_class = self.type.device_class
 
@@ -250,19 +253,19 @@ class ResumatCD4:
         "Temp-Raum":          Attribute(0x0028, 0x0004, "01.08", "Temp-Raum", Temperature,),
         "Temp-WQuelle-Ein":   Attribute(0x0030, 0x0004, "01.10", "Temp-WQuelle-Ein", Temperature,),
         "Temp-WQuelle-Aus":   Attribute(0x0034, 0x0004, "01.11", "Temp-WQuelle-Aus", Temperature,),
-        "Unterbrechungen":    Attribute(0x00C3, 0x0001, "08.00", "Unterbrechungen",   BitField, "Unterbrechungen"),
-        "WarnungEingang":     Attribute(0x00C4, 0x0001, "08.01", "WarnungEingang",    BitField["VerdampfungstemperaturZuNiedrig", "TemperaturQuelleAustrittZuNiedrig", "DiffQuelleEinQuelleAusZuHoch", "DiffQuelleAusVerdampfungZuHoch"], "Warnung Eingangsseite"),
-        "WarnungAusgang":     Attribute(0x00C5, 0x0001, "08.02", "WarnungAusgang",    BitField["", "KondensationstemperaturZuHoch", "DiffHzgVorlaufRuecklaufZuNiedrig", "DiffHzgVorlaufRuecklaufZuHoch", "DiffKondensationVorlaufZuHoch"], "Warnung Ausgangsseite"),
-        "WarnungSonstige":    Attribute(0x00C6, 0x0001, "08.03", "WarnungSonstige",   BitField["RuecklauffuehlerDefekt", "VorlauffuehlerDefekt", "AussenwandfuehlerDefkt", "DoBufferHandstellung", "SolestandMin"], "Warnung Sonstige"),
-        "Ausfall":            Attribute(0x00C7, 0x0001, "08.04", "Ausfall",           BitField, "Ausfälle"),
+        "Unterbrechungen":    Attribute(0x00C3, 0x0001, "08.00", "Unterbrechungen",   BitField, "Unterbrechungen", poll_intervall=900),
+        "WarnungEingang":     Attribute(0x00C4, 0x0001, "08.01", "WarnungEingang",    BitField["VerdampfungstemperaturZuNiedrig", "TemperaturQuelleAustrittZuNiedrig", "DiffQuelleEinQuelleAusZuHoch", "DiffQuelleAusVerdampfungZuHoch"], "Warnung Eingangsseite", poll_intervall=900),
+        "WarnungAusgang":     Attribute(0x00C5, 0x0001, "08.02", "WarnungAusgang",    BitField["", "KondensationstemperaturZuHoch", "DiffHzgVorlaufRuecklaufZuNiedrig", "DiffHzgVorlaufRuecklaufZuHoch", "DiffKondensationVorlaufZuHoch"], "Warnung Ausgangsseite", poll_intervall=900),
+        "WarnungSonstige":    Attribute(0x00C6, 0x0001, "08.03", "WarnungSonstige",   BitField["RuecklauffuehlerDefekt", "VorlauffuehlerDefekt", "AussenwandfuehlerDefkt", "DoBufferHandstellung", "SolestandMin"], "Warnung Sonstige", poll_intervall=900),
+        "Ausfall":            Attribute(0x00C7, 0x0001, "08.04", "Ausfall",           BitField, "Ausfälle", poll_intervall=900),
         "Betriebszustaende":  Attribute(0x00CE, 0x0001, "09.00", "Betriebszustaende", BitField),
         "DI-Buffer":          Attribute(0x00D0, 0x0001, "09.02", "DI-Buffer", BitField),
-        "Mode-Heizung":       Attribute(0x00DF, 0x0001, "09.10", "Mode-Heizung",      BitField["0-UnterbrFuehlerfehler", "1-KeinBedarf", "2-Unterdrueckt", "3-Zeitprog", "4-Sommer", "5-SchnellAufhz", "6-Aus", "7-Normal"]),
-        "Mode-Kuehlung":      Attribute(0x00E0, 0x0001, "09.11", "Mode-Kuehlung",     BitField["0", "1", "2", "3-Aus", "4", "5", "6", "7"],),
-        "Mode-Warmwasser":    Attribute(0x00E1, 0x0001, "09.12", "Mode-Warmwasser",   BitField["0", "1", "2", "3-KeinBedarf", "4", "5", "6", "7"],),
+        "Mode-Heizung":       Attribute(0x00DF, 0x0001, "09.10", "Mode-Heizung",      BitField["0-UnterbrFuehlerfehler", "1-KeinBedarf", "2-Unterdrueckt", "3-Zeitprog", "4-Sommer", "5-SchnellAufhz", "Aus", "7-Normal"], poll_intervall=60),
+        "Mode-Kuehlung":      Attribute(0x00E0, 0x0001, "09.11", "Mode-Kuehlung",     BitField["0", "1", "2", "Aus", "4", "5", "6", "7"], poll_intervall=60),
+        "Mode-Warmwasser":    Attribute(0x00E1, 0x0001, "09.12", "Mode-Warmwasser",   BitField["Ein", "1", "Zeitprog", "KeinBedarf", "4", "5", "6", "7"], poll_intervall=60),
     }
 
-    def __init__(self, port = '/dev/heizung', baudrate = 9600) -> None:
+    def __init__(self, port, baudrate = 9600) -> None:
         self.serial = serial.Serial(port, baudrate)
         
     def build_read_command(self, address, length):
@@ -284,6 +287,7 @@ class ResumatCD4:
         data = self.serial.read_until(self.ByteSequence.end)
         crc = self.serial.read(2)
         footer = self.serial.read(1)  # expected FF
+        logger.debug("Data received: %s", bytes.hex(header[1:] + data + crc))
 
         return header[1:] + data + crc
 

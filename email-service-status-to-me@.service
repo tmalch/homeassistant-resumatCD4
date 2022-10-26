@@ -1,0 +1,10 @@
+[Unit]
+Description=%i failure email notification 
+
+[Service]
+ExecStart=/bin/bash -c '/bin/systemctl status %i | /usr/bin/mailx -s "[%i] failure notification" %u@localhost'
+
+[Install]
+WantedBy=multi-user.target
+
+
