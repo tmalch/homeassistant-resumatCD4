@@ -5,7 +5,9 @@ a homeassistant friendly format.
 Install: 
 * Download or clone 
 * pip3 install -r requirements.txt
-* Change values in config.py according to your needs 
+* Change values in config.py according to your needs
+* run python3 main.py
+Install as service (optional)
 * In resumatCD4-datacollector.service set WorkingDirectory= to the path of this project
 * In file email-service-status-to-me@.service you can set an email address to receive errors on failure of the systemd service (default $USER@localhost)
 * Copy the .service files to /etc/systemd/system/
