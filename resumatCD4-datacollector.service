@@ -1,11 +1,11 @@
 [Unit]
 Description=Waterkotte ResumatCD4 Data Collector Service
+OnFailure=email-service-status-to-me@%i.service
 
 [Service]
 Type=simple
 User=root
 Restart=on-failure
-OnFailure=email-service-status-to-me@%i.service
 WorkingDirectory=/usr/local/resumatCD4_homeassistant/
 ExecStart=python3 main.py
 
